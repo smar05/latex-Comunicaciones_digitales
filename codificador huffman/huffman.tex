@@ -1,0 +1,116 @@
+\maketitle
+
+\section{Laboratorio}
+Realizar el algoritmo del codificador y decodificador para la codificación Huffman mediante el software de Matlab.
+
+\section{Solución}
+\subsection{Codificador}
+
+\lstset{language=Matlab,%
+    %basicstyle=\color{red},
+    breaklines=true,%
+    morekeywords={matlab2tikz},
+    keywordstyle=\color{blue},%
+    morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+    identifierstyle=\color{black},%
+    stringstyle=\color{mylilas},
+    commentstyle=\color{mygreen},%
+    showstringspaces=false,%without this there will be a symbol in the places where there is a space
+    numbers=left,%
+    numberstyle={\tiny \color{black}},% size of the numbers
+    numbersep=9pt, % this defines how far the numbers are from the text
+    emph=[1]{for,end,break},emphstyle=[1]\color{red}, %some words to emphasise
+    %emph=[2]{word1,word2}, emphstyle=[2]{style},    
+}
+
+Inicialmente, se implementa el siguiente codigo.
+
+\begin{lstlisting}[language=Matlab,breaklines = true,frame      = false]
+   mensaje = fopen(in); % file open
+   lectura = fscanf(mensaje,'%c'); % Se lee la data del archivo
+   tamanioLectura = length(lectura); % Cantidad de caracteres del archivo
+   toAscii = double(lectura); % Se convierten las letras a numeros por ascii
+   inAscii = 32; % espacio
+   endAscii = 126; % ~
+   
+\end{lstlisting}
+
+Donde $in$, es un archivo de tipo .txt que contiene un mensaje en texto. Se lee el contenido del archivo y se convierten las palabras a el código Ascii. Se analizaran los caracteres del código Ascii imprimibles, los cuales van desde 'espacio' = 32 hasta 126 = \~  .
+
+\begin{lstlisting}[language=Matlab,breaklines = true,frame      = false]
+   proLetras = []; % Probabilidad de cada letra
+   
+   % Calculo de las probabilidades
+   for i=inAscii:endAscii % Desde el espacio hasta la z
+       proLetras = [proLetras,length(find(toAscii==i))/tamanioLectura]; % Se aniade su probabilidad
+   end
+   
+\end{lstlisting}
+
+Luego se calcula la probabilidad de que salga un carácter en el texto, para lo cual se cuentan la cantidad de veces que aparece cada carácter y se divide por la cantidad de carácteres.
+
+\begin{lstlisting}[language=Matlab,breaklines = true,frame      = false]
+   [dic,M] = Huffman_Dict(proLetras);% Diccionario
+   ldic = length(dic);
+   dic2 = [];
+   a = '';
+
+   % Se convierten los datos del diccionario a texto
+    for i=1:ldic    
+        for j=1:length(dic(i).a)        
+            a = strcat(a,string(dic(i).a(j)));
+        end
+        dic2=[dic2,string(a)];
+        a='';
+    end
+   
+\end{lstlisting}
+
+Ahora, en base a las probabilidades calculadas, se usa la función de $Huffman\_Dict()$ entregada por el profesor, para obtener el diccionario, luego se convierten los datos del diccionario a tipo String para facilitar su manejo.
+
+\begin{lstlisting}[language=Matlab,breaklines = true,frame      = false]
+    textoCodificado = '';
+
+    % Se busca cada letra del mensaje y se guarda con su valor del
+    %diccionario
+    for i=1:length(toAscii)
+        textoCodificado = strcat(textoCodificado,string(dic2(toAscii(i)-(inAscii-1))));
+    end
+
+    % Se convierte de String a vector de char
+    codificado = convertStringsToChars(textoCodificado);
+    diccionario = dic2;
+   
+\end{lstlisting}
+
+Finalmente, se recorre el mensaje a transmitir, donde se buscara cada carácter y se busca su representación en el diccionario, para finalmente concatenarlo a la salida del codificador.\\
+La salida del codificador sera la señal codificada y el diccionario.
+
+\subsection{Decodificador}
+
+El código del decodificador se muestra a continuación.
+
+\begin{lstlisting}[language=Matlab,breaklines = true,frame      = false]
+    function[out] = Huffman_Deco(in,dic)
+
+    % in: entrada de datos binaria
+    % dic: diccionario
+    
+    lin = length(in);
+    a = '';
+    mensaje = [];
+    
+    for i=1:lin
+        a = strcat(a,in(i)); % Se concatena la codificacion de a un bit
+        if find(dic==a) % Se analiza si lo concatenado existe en el diccionario
+            mensaje = [mensaje,find(dic==a)+31];
+            a='';
+        end
+    end
+    
+    out = char(mensaje);
+   
+\end{lstlisting}
+
+Para el decodificador, simplemente se recorre la señal codificada bit a bit y se va concatenando cada bit a una variable, por cada bit añadido, se busca si lo que se lleva concatenado existe en el diccionario, si existe, se analiza a que carácter pertenece y se concatena en la señal de salida, y se sigue el mismo procedimiento hasta finalizar el texto codificado.
+
